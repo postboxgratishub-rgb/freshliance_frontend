@@ -30,6 +30,10 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m6 14v-7m5 7V3"/></svg>
               Conditions
             </a>
+            <a class="nav-item" href="#data-logs">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h11M8 12h11M8 19h11M4 5h.01M4 12h.01M4 19h.01"/></svg>
+              Logs
+            </a>
             <a class="nav-item" href="#thresholds">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.7 19h18.6L12 3Zm0 5v5m0 3v.1"/></svg>
               Thresholds
@@ -46,10 +50,12 @@
               <span class="pulse-dot" aria-hidden="true"></span>
               <div><strong>Connecting</strong><small>Waiting for GSM telemetry</small></div>
             </div>
-            <button class="account-button" id="copyEndpointButton" type="button" title="Copy device endpoint">
-              <span class="account-avatar" aria-hidden="true">↗</span>
-              <span><strong>Device API</strong><small>Copy endpoint</small></span>
-            </button>
+            <div class="gps-card" id="gpsStatus" title="Device location: IIIT Sonepat">
+              <span class="gps-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+              </span>
+              <span><strong>GPS active</strong><small>IIIT Sonepat</small></span>
+            </div>
           </div>
         </div>
 
@@ -77,9 +83,9 @@
         <main id="main-content">
           <section class="hero" id="overview" aria-labelledby="overviewTitle">
             <div>
-              <div class="eyebrow"><span class="live-dot"></span> Live operations</div>
+              <div class="eyebrow live-stream-eyebrow"><span class="live-dot"></span> GSM telemetry stream</div>
               <h1 id="overviewTitle">Shipment overview</h1>
-              <p>Live cold-chain conditions and GSM device health at IIIT Sonepat.</p>
+              <p>Live sensor readings received from the GSM data logger at IIIT Sonepat.</p>
             </div>
             <div class="shipment-summary">
               <span class="status-chip" id="shipmentStatus"><span></span> Awaiting data</span>
@@ -183,6 +189,54 @@
                 <g id="chartLabels"></g>
               </svg>
               <div class="chart-tooltip is-hidden" id="chartTooltip" aria-hidden="true"></div>
+            </div>
+          </section>
+
+          <section class="panel data-logs-panel" id="data-logs" aria-labelledby="dataLogsTitle">
+            <div class="panel-header data-logs-header">
+              <div>
+                <span class="section-kicker">Device data logger</span>
+                <h2 id="dataLogsTitle">Data logs</h2>
+                <p>Time-stamped telemetry received directly from the selected GSM device.</p>
+              </div>
+              <div class="data-logs-tools">
+                <div class="stream-status waiting" role="status" aria-live="polite" aria-atomic="true">
+                  <span class="stream-status-dot" aria-hidden="true"></span>
+                  <span id="dataLogsLiveStatus">Waiting for device</span>
+                </div>
+                <button class="secondary-button export-logs-button" id="exportLogsButton" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+                  Export CSV
+                </button>
+              </div>
+            </div>
+            <div class="log-summary-bar">
+              <div class="log-summary-copy">
+                <span class="log-summary-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 17h3l2-5 3 8 3-13 2 10h3"/></svg>
+                </span>
+                <span><strong>Incoming readings</strong><small>New device records appear here as they are received.</small></span>
+              </div>
+              <div class="log-count" aria-label="Logged record count"><strong id="dataLogsCount">0</strong><span>records</span></div>
+            </div>
+            <div class="table-wrap data-logs-table-wrap">
+              <table class="data-logs-table">
+                <caption class="sr-only">Time-stamped sensor readings from the selected data logger</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Timestamp</th>
+                    <th scope="col">Device</th>
+                    <th scope="col">Shipment</th>
+                    <th scope="col">Temperature</th>
+                    <th scope="col">Humidity</th>
+                    <th scope="col">Light</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dataLogsBody">
+                  <tr class="loading-row"><td colspan="7"><span class="loading-ring"></span> Loading device logs…</td></tr>
+                </tbody>
+              </table>
             </div>
           </section>
 

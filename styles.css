@@ -2474,3 +2474,353 @@ footer {
     padding: 18px;
   }
 }
+
+/* Live telemetry logger */
+.gps-card {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .055);
+  color: #fff;
+}
+
+.gps-card > span:last-child,
+.gps-card strong,
+.gps-card small {
+  display: block;
+}
+
+.gps-card strong {
+  color: rgba(255, 255, 255, .92);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.gps-card small {
+  margin-top: 1px;
+  color: rgba(255, 255, 255, .52);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.gps-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .1);
+  color: #9bd0b4;
+}
+
+.gps-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.live-stream-eyebrow {
+  color: var(--green);
+}
+
+.data-logs-panel {
+  overflow: hidden;
+  scroll-margin-top: 132px;
+}
+
+.data-logs-header {
+  background: linear-gradient(180deg, #fff 0%, #fbfcfb 100%);
+}
+
+.data-logs-tools {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.stream-status {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid #cfe2d7;
+  border-radius: 7px;
+  background: #f1f8f4;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stream-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px rgba(36, 112, 79, .11);
+}
+
+.stream-status.online .stream-status-dot,
+.stream-status.live .stream-status-dot {
+  animation: telemetry-pulse 1.8s ease-out infinite;
+}
+
+.stream-status.waiting {
+  border-color: #ead9bb;
+  background: #fff9ef;
+  color: var(--amber);
+}
+
+.stream-status.offline,
+.stream-status.error {
+  border-color: #edcac4;
+  background: #fff5f3;
+  color: var(--red);
+}
+
+@keyframes telemetry-pulse {
+  0%, 45% { box-shadow: 0 0 0 4px rgba(36, 112, 79, .12); }
+  75%, 100% { box-shadow: 0 0 0 8px rgba(36, 112, 79, 0); }
+}
+
+.export-logs-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.log-summary-bar {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 23px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.log-summary-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+}
+
+.log-summary-copy strong,
+.log-summary-copy small {
+  display: block;
+}
+
+.log-summary-copy strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.log-summary-copy small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.log-summary-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #cfe2d7;
+  border-radius: 7px;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.log-summary-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.log-count {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--muted-2);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.log-count strong {
+  color: var(--ink);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.03em;
+}
+
+.data-logs-table-wrap {
+  max-height: 500px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.data-logs-table {
+  min-width: 880px;
+}
+
+.data-logs-table th,
+.data-logs-table td {
+  display: table-cell;
+}
+
+.data-logs-table th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  white-space: nowrap;
+}
+
+.data-logs-table th:first-child {
+  width: 190px;
+}
+
+.data-logs-table th:nth-child(2),
+.data-logs-table th:nth-child(3) {
+  width: 140px;
+}
+
+.data-logs-table th:nth-child(n + 4):nth-child(-n + 6) {
+  width: 118px;
+  text-align: right;
+}
+
+.data-logs-table th:last-child {
+  width: 112px;
+}
+
+.data-logs-table td {
+  height: 56px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.data-logs-table td:nth-child(n + 4):nth-child(-n + 6) {
+  color: var(--ink);
+  font-weight: 650;
+  text-align: right;
+}
+
+.data-logs-table tbody tr:not(.loading-row):not(.table-empty):not(.table-error) {
+  transition: background .16s ease;
+}
+
+.data-logs-table tbody tr:not(.loading-row):not(.table-empty):not(.table-error):hover {
+  background: #f8faf9;
+}
+
+.data-logs-table .loading-row td,
+.data-logs-table .table-empty td,
+.data-logs-table .table-error td {
+  text-align: center;
+}
+
+.data-log-row.is-new {
+  animation: new-reading 1.2s ease-out both;
+}
+
+@keyframes new-reading {
+  from { background: #e9f5ee; }
+  to { background: transparent; }
+}
+
+@media (max-width: 1080px) {
+  .gps-card small {
+    display: none;
+  }
+}
+
+@media (max-width: 780px) {
+  .nav-actions .gps-card {
+    width: 36px;
+    min-height: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .nav-actions .gps-card > span:last-child {
+    display: none;
+  }
+
+  .nav-actions .gps-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .data-logs-panel {
+    scroll-margin-top: 168px;
+  }
+
+  .data-logs-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .data-logs-tools {
+    width: 100%;
+  }
+
+  .stream-status {
+    flex: 1;
+  }
+
+  .log-summary-bar {
+    padding-inline: 18px;
+  }
+
+  .data-logs-table {
+    min-width: 820px;
+  }
+}
+
+@media (max-width: 560px) {
+  .data-logs-tools {
+    align-items: stretch;
+  }
+
+  .stream-status,
+  .export-logs-button {
+    min-height: 38px;
+  }
+
+  .log-summary-copy small {
+    display: none;
+  }
+
+  .log-summary-bar {
+    min-height: 58px;
+  }
+}

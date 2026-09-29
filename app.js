@@ -82,7 +82,7 @@
   function cacheElements() {
     [
       'alertCount', 'lastUpdated', 'deviceSelect', 'refreshButton', 'copyEndpointButton',
-      'shipmentStatus', 'shipmentId', 'locationValue', 'systemConnection', 'temperatureValue',
+      'shipmentStatus', 'shipmentId', 'locationValue', 'gpsStatus', 'systemConnection', 'temperatureValue',
       'temperatureState', 'temperatureDetail', 'humidityValue', 'humidityState',
       'humidityDetail', 'lightValue', 'lightState', 'lightDetail', 'connectivityState',
       'connectivityValue', 'lastSeen', 'chartMetricLabel', 'chartCurrent', 'chartMin',
@@ -93,7 +93,8 @@
       'thresholdMetric', 'thresholdMin', 'thresholdMax', 'thresholdHysteresis',
       'thresholdConsecutive', 'thresholdEmail', 'thresholdEnabled', 'thresholdFormError',
       'saveThresholdButton', 'toastRegion', 'footerDevice', 'pageBanner',
-      'pageBannerTitle', 'pageBannerMessage', 'bannerRetry'
+      'pageBannerTitle', 'pageBannerMessage', 'bannerRetry', 'dataLogsBody',
+      'dataLogsCount', 'dataLogsLiveStatus', 'exportLogsButton'
     ].forEach((id) => { elements[id] = $(id); });
   }
 
@@ -166,7 +167,11 @@
   function normalizeReading(raw = {}) {
     const values = raw.values || raw.metrics || raw.data || {};
     return {
-      time: toTime(firstDefined(raw.recordedAt, raw.timestamp, raw.createdAt, raw.receivedAt, raw.time)),
+      id: String(firstDefined(raw.id, raw.readingId, raw._id, '')),
+      deviceId: String(firstDefined(raw.deviceId, raw.device?.id, typeof raw.device === 'string' ? raw.device : undefined, state.deviceId, DEFAULT_DEVICE_ID)),
+      shipmentId: String(firstDefined(raw.shipmentId, raw.shipment?.id, typeof raw.shipment === 'string' ? raw.shipment : undefined, raw.assignment?.shipmentId, '')),
+      time: toTime(firstDefined(raw.measuredAt, raw.recordedAt, raw.timestamp, raw.createdAt, raw.receivedAt, raw.time)),
+      receivedAt: toTime(firstDefined(raw.receivedAt, raw.createdAt, raw.measuredAt, raw.time)),
       temperature: toNumber(firstDefined(raw.temperature, raw.temperatureC, raw.temp, values.temperature, values.temperatureC, values.temp)),
       humidity: toNumber(firstDefined(raw.humidity, raw.relativeHumidity, values.humidity, values.relativeHumidity)),
       light: toNumber(firstDefined(raw.light, raw.lux, raw.lightLux, values.light, values.lux, values.lightLux)),
@@ -292,6 +297,7 @@
       showPageError(error);
       if (!state.dashboard) renderUnavailableStates();
       renderConnection();
+      renderDataLogsMeta();
       if (announce) showToast(error.message || 'Unable to refresh dashboard.', true);
     } finally {
       state.requestPending = false;
@@ -323,6 +329,7 @@
     renderChart();
     renderThresholds();
     renderAlerts();
+    renderDataLogs();
     renderUpdatedTime();
   }
 
@@ -545,6 +552,112 @@
     }).join('');
   }
 
+  function recentReadingsNewestFirst() {
+    return [...(state.dashboard?.readings || [])]
+      .sort((left, right) => (right.time || 0) - (left.time || 0));
+  }
+
+  function readingReceiptStatus(reading, index) {
+    const isLatestLiveReading = index === 0
+      && Number.isFinite(reading.time)
+      && Date.now() - reading.time <= OFFLINE_AFTER_MS
+      && !state.fetchError;
+    return isLatestLiveReading
+      ? { label: 'Live', className: 'live' }
+      : { label: 'Received', className: 'received' };
+  }
+
+  function renderDataLogsMeta(readingCount = state.dashboard?.readings?.length || 0) {
+    if (elements.dataLogsCount) {
+      elements.dataLogsCount.textContent = String(readingCount);
+    }
+    if (!elements.dataLogsLiveStatus) return;
+
+    const feedLive = Boolean(state.dashboard && isDeviceOnline() && !state.fetchError);
+    const statusBadge = elements.dataLogsLiveStatus.closest('.stream-status');
+    statusBadge?.classList.remove('waiting');
+    statusBadge?.classList.toggle('live', feedLive);
+    statusBadge?.classList.toggle('offline', !feedLive);
+    elements.dataLogsLiveStatus.textContent = state.fetchError
+      ? 'Sync interrupted'
+      : feedLive
+        ? 'Live · 3s refresh'
+        : 'Device offline';
+  }
+
+  function renderDataLogs() {
+    if (!elements.dataLogsBody) return;
+    const readings = recentReadingsNewestFirst();
+    renderDataLogsMeta(readings.length);
+    if (elements.exportLogsButton) elements.exportLogsButton.disabled = readings.length === 0;
+
+    if (!readings.length) {
+      elements.dataLogsBody.innerHTML = '<tr class="table-empty"><td colspan="7">No sensor readings have been received for this device.</td></tr>';
+      return;
+    }
+
+    const device = state.dashboard?.device || {};
+    elements.dataLogsBody.innerHTML = readings.map((reading, index) => {
+      const time = Number.isFinite(reading.time) ? reading.time : null;
+      const timestamp = time ? formatLogDateTime(time) : 'Time unavailable';
+      const isoTime = time ? new Date(time).toISOString() : '';
+      const deviceId = reading.deviceId || device.id || state.deviceId;
+      const shipmentId = reading.shipmentId || device.shipmentId || '—';
+      const status = readingReceiptStatus(reading, index);
+      const value = (metric) => Number.isFinite(reading[metric]) ? formatMetric(reading[metric], metric) : '—';
+      const statusStyle = status.className === 'live' ? 'recovered' : 'not_configured';
+      return `<tr class="data-log-row">
+        <td class="log-time"><time${isoTime ? ` datetime="${escapeHtml(isoTime)}"` : ''}>${escapeHtml(timestamp)}</time></td>
+        <td class="log-device">${escapeHtml(deviceId)}</td>
+        <td class="log-shipment">${escapeHtml(shipmentId)}</td>
+        <td class="log-value">${escapeHtml(value('temperature'))}</td>
+        <td class="log-value">${escapeHtml(value('humidity'))}</td>
+        <td class="log-value">${escapeHtml(value('light'))}</td>
+        <td><span class="table-status log-status ${statusStyle}">${escapeHtml(status.label)}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function csvCell(value) {
+    return `"${String(value ?? '').replace(/"/g, '""')}"`;
+  }
+
+  function exportDataLogs() {
+    const readings = recentReadingsNewestFirst();
+    if (!readings.length) {
+      showToast('No readings are available to export.', true);
+      return;
+    }
+
+    const device = state.dashboard?.device || {};
+    const rows = readings.map((reading, index) => {
+      const status = readingReceiptStatus(reading, index).label;
+      return [
+        Number.isFinite(reading.time) ? new Date(reading.time).toISOString() : '',
+        reading.deviceId || device.id || state.deviceId,
+        reading.shipmentId || device.shipmentId || '',
+        Number.isFinite(reading.temperature) ? reading.temperature.toFixed(metricInfo.temperature.decimals) : '',
+        Number.isFinite(reading.humidity) ? reading.humidity.toFixed(metricInfo.humidity.decimals) : '',
+        Number.isFinite(reading.light) ? reading.light.toFixed(metricInfo.light.decimals) : '',
+        status
+      ];
+    });
+    const csv = [
+      ['Timestamp', 'Device', 'Shipment', 'Temperature (°C)', 'Humidity (%)', 'Light (lux)', 'Status'],
+      ...rows
+    ].map((row) => row.map(csvCell).join(',')).join('\r\n');
+    const blobUrl = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.href = blobUrl;
+    link.download = `fieldlink-${state.deviceId}-${timestamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(blobUrl);
+    showToast(`${readings.length} reading${readings.length === 1 ? '' : 's'} exported.`);
+  }
+
   function notificationStatusLabel(channel, status) {
     const label = { SENT: 'sent', PENDING: 'pending', FAILED: 'failed' }[status] || 'sent';
     return `${channel} ${label}`;
@@ -557,6 +670,11 @@
     elements.historyChart.classList.add('is-hidden');
     elements.thresholdContent.innerHTML = '<div class="error-state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.7 19h18.6L12 3Zm0 5v5m0 3v.1"/></svg><strong>Unable to load thresholds</strong><p>Check the monitoring service and retry.</p><button class="text-button" type="button" data-retry>Retry</button></div>';
     elements.alertsBody.innerHTML = '<tr class="table-error"><td colspan="5">Unable to load recent alerts. Retrying automatically.</td></tr>';
+    if (elements.dataLogsBody) {
+      elements.dataLogsBody.innerHTML = '<tr class="table-error"><td colspan="7">Unable to load sensor readings. Retrying automatically.</td></tr>';
+    }
+    if (elements.exportLogsButton) elements.exportLogsButton.disabled = true;
+    renderDataLogsMeta(0);
     ['temperature', 'humidity', 'light'].forEach((metric) => {
       elements[`${metric}Value`].textContent = '—';
       elements[`${metric}State`].textContent = 'No data';
@@ -669,7 +787,8 @@
   function setupEvents() {
     elements.refreshButton.addEventListener('click', () => pollDashboard({ announce: true }));
     elements.bannerRetry.addEventListener('click', () => pollDashboard({ announce: true }));
-    elements.copyEndpointButton.addEventListener('click', copyDeviceEndpoint);
+    elements.copyEndpointButton?.addEventListener('click', copyDeviceEndpoint);
+    elements.exportLogsButton?.addEventListener('click', exportDataLogs);
     elements.addThresholdButton.addEventListener('click', () => openThresholdDialog());
     elements.thresholdForm.addEventListener('submit', saveThreshold);
     document.querySelectorAll('[data-close-threshold]').forEach((button) => button.addEventListener('click', () => elements.thresholdDialog.close()));
@@ -713,6 +832,17 @@
   function showLoadingStates() {
     elements.thresholdContent.innerHTML = '<div class="skeleton-list" aria-label="Loading thresholds"><div></div><div></div><div></div></div>';
     elements.alertsBody.innerHTML = '<tr class="loading-row"><td colspan="5"><span class="loading-ring"></span> Loading recent alerts…</td></tr>';
+    if (elements.dataLogsBody) {
+      elements.dataLogsBody.innerHTML = '<tr class="loading-row"><td colspan="7"><span class="loading-ring"></span> Loading sensor readings…</td></tr>';
+    }
+    if (elements.dataLogsCount) elements.dataLogsCount.textContent = '—';
+    if (elements.dataLogsLiveStatus) {
+      elements.dataLogsLiveStatus.textContent = 'Connecting…';
+      const statusBadge = elements.dataLogsLiveStatus.closest('.stream-status');
+      statusBadge?.classList.remove('live', 'offline');
+      statusBadge?.classList.add('waiting');
+    }
+    if (elements.exportLogsButton) elements.exportLogsButton.disabled = true;
     elements.chartPlaceholder.classList.remove('is-hidden', 'empty');
     elements.chartPlaceholder.innerHTML = '<span class="loading-ring" aria-hidden="true"></span><p>Loading sensor history…</p>';
     elements.historyChart.classList.add('is-hidden');
@@ -750,6 +880,13 @@
     return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(time));
   }
 
+  function formatLogDateTime(time) {
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric', month: 'short', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).format(new Date(time));
+  }
+
   function relativeTime(time) {
     const seconds = Math.max(0, Math.floor((Date.now() - time) / 1000));
     if (seconds < 5) return 'just now';
@@ -768,6 +905,11 @@
   async function init() {
     cacheElements();
     if (elements.locationValue) elements.locationValue.textContent = DEPLOYMENT_LOCATION;
+    if (elements.gpsStatus) {
+      const gpsLabel = elements.gpsStatus.querySelector('strong');
+      if (gpsLabel) gpsLabel.textContent = 'GPS active';
+      elements.gpsStatus.classList.add('active');
+    }
     setupEvents();
     showLoadingStates();
     await loadDevices();
