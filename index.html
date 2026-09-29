@@ -54,7 +54,7 @@
               <span class="gps-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
               </span>
-              <span><strong>GPS active</strong><small>IIIT Sonepat</small></span>
+              <span><strong>GPS active</strong><small>Position locked</small></span>
             </div>
           </div>
         </div>
@@ -85,15 +85,11 @@
             <div>
               <div class="eyebrow live-stream-eyebrow"><span class="live-dot"></span> GSM telemetry stream</div>
               <h1 id="overviewTitle">Shipment overview</h1>
-              <p>Live sensor readings received from the GSM data logger at IIIT Sonepat.</p>
+              <p>Live sensor readings received directly from the GSM data logger.</p>
             </div>
             <div class="shipment-summary">
               <span class="status-chip" id="shipmentStatus"><span></span> Awaiting data</span>
               <div class="shipment-id"><small>Shipment</small><strong id="shipmentId">SHIP-001</strong></div>
-              <div class="summary-detail">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
-                <span><small>Location</small><strong id="locationValue">IIIT Sonepat</strong></span>
-              </div>
               <div class="summary-detail network-detail">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-3m5 3v-7m5 7V9m5 11V4"/></svg>
                 <span><small>Network</small><strong>GSM / Cellular</strong></span>
@@ -149,6 +145,26 @@
               <div class="metric-value compact"><span id="connectivityValue">—</span></div>
               <p class="metric-detail" id="lastSeen">Last seen: never</p>
             </article>
+          </section>
+
+          <section class="panel location-panel" id="location-map" aria-labelledby="locationMapTitle">
+            <div class="panel-header location-panel-header">
+              <div>
+                <span class="section-kicker">GPS position</span>
+                <h2 id="locationMapTitle">Device location</h2>
+                <p>The active GPS position is shown on the map.</p>
+              </div>
+              <span class="map-lock-status"><span aria-hidden="true"></span> GPS active</span>
+            </div>
+            <div class="map-frame">
+              <iframe
+                title="Map showing the device location at IIIT Sonepat"
+                src="https://www.google.com/maps?q=IIIT%20Sonepat%20Permanent%20Campus%2C%20Kilorad%2C%20Haryana&amp;z=16&amp;output=embed"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen>
+              </iframe>
+            </div>
           </section>
 
           <section class="panel chart-panel" id="conditions" aria-labelledby="conditionsTitle">
