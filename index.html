@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#13241d" />
+    <meta name="description" content="Live farm-to-fork shipment conditions and threshold alerts." />
+    <title>FieldLink · Shipment monitor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-primary">
+          <a class="brand" href="#overview" aria-label="FieldLink dashboard home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" role="img"><path d="M25.8 5.8C16.9 5.8 10 10.4 8.2 18c5.1-3.4 9.4-4.6 13-3.6-6.2.4-10.7 2.8-13.5 7.1-.8 1.3-1.3 2.8-1.6 4.6h3.8c.2-1.5.6-2.8 1.2-4 9.1.3 14.7-5.1 14.7-16.3Z"/></svg>
+            </span>
+            <span><strong>FieldLink</strong><small>Cold-chain monitor</small></span>
+          </a>
+
+          <nav class="nav-list" aria-label="Dashboard sections">
+            <a class="nav-item is-active" href="#overview">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
+              Overview
+            </a>
+            <a class="nav-item" href="#conditions">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m6 14v-7m5 7V3"/></svg>
+              Conditions
+            </a>
+            <a class="nav-item" href="#thresholds">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.7 19h18.6L12 3Zm0 5v5m0 3v.1"/></svg>
+              Thresholds
+            </a>
+            <a class="nav-item" href="#alerts">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Zm-8 12h4"/></svg>
+              Alerts
+              <span class="nav-count" id="alertCount" aria-label="0 recent alerts">0</span>
+            </a>
+          </nav>
+
+          <div class="nav-actions">
+            <div class="connection-card" id="systemConnection" title="Device connection status">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              <div><strong>Connecting</strong><small>Waiting for device telemetry</small></div>
+            </div>
+            <button class="account-button" id="copyEndpointButton" type="button" title="Copy device endpoint">
+              <span class="account-avatar" aria-hidden="true">↗</span>
+              <span><strong>Copy endpoint</strong><small>POST /api/sensor-readings</small></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="topbar-secondary">
+          <div class="shipment-context">
+            <span class="context-label">Monitoring device</span>
+            <label class="sr-only" for="deviceSelect">Select a device</label>
+            <div class="select-wrap">
+              <select id="deviceSelect" disabled>
+                <option>Loading devices…</option>
+              </select>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+            </div>
+          </div>
+          <div class="device-actions">
+            <span class="last-updated" id="lastUpdated">Waiting for data…</span>
+            <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh dashboard" title="Refresh dashboard">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <main id="main-content">
+          <section class="hero" id="overview" aria-labelledby="overviewTitle">
+            <div>
+              <div class="eyebrow"><span class="live-dot"></span> Live operations</div>
+              <h1 id="overviewTitle">Shipment overview</h1>
+              <p>Live environmental conditions across your farm-to-fork journey.</p>
+            </div>
+            <div class="shipment-summary">
+              <span class="status-chip" id="shipmentStatus"><span></span> Awaiting data</span>
+              <div class="shipment-id"><small>Shipment</small><strong id="shipmentId">SHIP-001</strong></div>
+            </div>
+          </section>
+
+          <div class="page-banner is-hidden" id="pageBanner" role="alert">
+            <div>
+              <strong id="pageBannerTitle">Unable to load dashboard</strong>
+              <span id="pageBannerMessage">Check your connection and try again.</span>
+            </div>
+            <button type="button" id="bannerRetry">Retry</button>
+          </div>
+
+          <section class="metric-grid" aria-label="Current conditions">
+            <article class="metric-card" data-metric="temperature">
+              <div class="metric-top">
+                <span class="metric-icon temperature" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a4 4 0 0 0-8 0v9.8a6 6 0 1 0 8 0ZM10 4a1 1 0 0 1 1 1v11.5l.5.3a3 3 0 1 1-3 0l.5-.3V5a1 1 0 0 1 1-1Z"/></svg></span>
+                <span class="metric-state neutral" id="temperatureState">Waiting</span>
+              </div>
+              <p class="metric-label">Temperature</p>
+              <div class="metric-value"><span id="temperatureValue">—</span><small>°C</small></div>
+              <p class="metric-detail" id="temperatureDetail">No reading received</p>
+            </article>
+
+            <article class="metric-card" data-metric="humidity">
+              <div class="metric-top">
+                <span class="metric-icon humidity" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8S5 10.4 5 15a7 7 0 0 0 14 0c0-4.6-7-12.2-7-12.2ZM9 15.5a3 3 0 0 0 3 3"/></svg></span>
+                <span class="metric-state neutral" id="humidityState">Waiting</span>
+              </div>
+              <p class="metric-label">Humidity</p>
+              <div class="metric-value"><span id="humidityValue">—</span><small>%</small></div>
+              <p class="metric-detail" id="humidityDetail">No reading received</p>
+            </article>
+
+            <article class="metric-card" data-metric="light">
+              <div class="metric-top">
+                <span class="metric-icon light" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 0-3 9v2h6v-2a5 5 0 0 0-3-9Zm-2 14h4M12 1v3M4.2 4.2l2.1 2.1m11.4 0 2.1-2.1M2 12h3m14 0h3"/></svg></span>
+                <span class="metric-state neutral" id="lightState">Waiting</span>
+              </div>
+              <p class="metric-label">Light exposure</p>
+              <div class="metric-value"><span id="lightValue">—</span><small>lux</small></div>
+              <p class="metric-detail" id="lightDetail">No reading received</p>
+            </article>
+
+            <article class="metric-card connectivity-card" data-metric="connectivity">
+              <div class="metric-top">
+                <span class="metric-icon connectivity" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 9a14 14 0 0 1 18 0M6.5 12.5a9 9 0 0 1 11 0M10 16a4 4 0 0 1 4 0M12 20h.01"/></svg></span>
+                <span class="metric-state neutral" id="connectivityState">Checking</span>
+              </div>
+              <p class="metric-label">Connectivity</p>
+              <div class="metric-value compact"><span id="connectivityValue">—</span></div>
+              <p class="metric-detail" id="lastSeen">Last seen: never</p>
+            </article>
+          </section>
+
+          <section class="panel chart-panel" id="conditions" aria-labelledby="conditionsTitle">
+            <div class="panel-header chart-header">
+              <div>
+                <span class="section-kicker">Sensor history</span>
+                <h2 id="conditionsTitle">Condition trend</h2>
+              </div>
+              <div class="chart-controls" role="group" aria-label="Chart metric">
+                <button type="button" class="chart-tab is-active" data-chart-metric="temperature">Temperature</button>
+                <button type="button" class="chart-tab" data-chart-metric="humidity">Humidity</button>
+                <button type="button" class="chart-tab" data-chart-metric="light">Light</button>
+              </div>
+            </div>
+            <div class="chart-summary">
+              <div><span class="chart-summary-label" id="chartMetricLabel">Temperature</span><strong id="chartCurrent">—</strong></div>
+              <div class="chart-range"><span id="chartMin">Low —</span><span id="chartMax">High —</span></div>
+            </div>
+            <div class="chart-wrap" id="chartWrap">
+              <div class="chart-placeholder" id="chartPlaceholder">
+                <span class="loading-ring" aria-hidden="true"></span>
+                <p>Loading sensor history…</p>
+              </div>
+              <svg id="historyChart" class="history-chart is-hidden" viewBox="0 0 900 280" preserveAspectRatio="none" role="img" aria-labelledby="chartTitle chartDescription">
+                <title id="chartTitle">Temperature history</title>
+                <desc id="chartDescription">A line chart of recent sensor readings.</desc>
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#dc6c45" stop-opacity=".28" />
+                    <stop offset="100%" stop-color="#dc6c45" stop-opacity="0" />
+                  </linearGradient>
+                  <filter id="pointShadow" x="-200%" y="-200%" width="400%" height="400%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".16"/></filter>
+                </defs>
+                <g id="chartGrid"></g>
+                <path id="chartArea" class="chart-area" d="" />
+                <path id="chartLine" class="chart-line" d="" />
+                <g id="chartPoints"></g>
+                <g id="chartLabels"></g>
+              </svg>
+              <div class="chart-tooltip is-hidden" id="chartTooltip" aria-hidden="true"></div>
+            </div>
+          </section>
+
+          <section class="panel" id="thresholds" aria-labelledby="thresholdsTitle">
+            <div class="panel-header">
+              <div>
+                <span class="section-kicker">Alert rules</span>
+                <h2 id="thresholdsTitle">Thresholds</h2>
+                <p>Email contacts when shipment conditions move outside safe limits.</p>
+              </div>
+              <button class="primary-button" id="addThresholdButton" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add threshold
+              </button>
+            </div>
+            <div id="thresholdContent" class="content-state">
+              <div class="skeleton-list" aria-label="Loading thresholds">
+                <div></div><div></div><div></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" id="alerts" aria-labelledby="alertsTitle">
+            <div class="panel-header">
+              <div>
+                <span class="section-kicker">Recent activity</span>
+                <h2 id="alertsTitle">Alerts</h2>
+                <p>The latest threshold events with email and SMS delivery updates.</p>
+              </div>
+              <span class="subtle-chip" id="alertsPeriod">Latest 50</span>
+            </div>
+            <div class="table-wrap" id="alertsContent">
+              <table>
+                <caption class="sr-only">Recent shipment alerts</caption>
+                <thead><tr><th scope="col">Event</th><th scope="col">Reading</th><th scope="col">Recipient</th><th scope="col">Time</th><th scope="col">Notifications</th></tr></thead>
+                <tbody id="alertsBody">
+                  <tr class="loading-row"><td colspan="5"><span class="loading-ring"></span> Loading recent alerts…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+        <footer><span>FieldLink shipment intelligence</span><span id="footerDevice">No device selected</span></footer>
+      </div>
+    </div>
+
+    <dialog id="thresholdDialog" class="modal threshold-modal" aria-labelledby="thresholdDialogTitle">
+      <form method="dialog" id="thresholdForm">
+        <div class="modal-header">
+          <div><span class="section-kicker">Alert rule</span><h2 id="thresholdDialogTitle">Add threshold</h2></div>
+          <button class="close-button" type="button" data-close-threshold aria-label="Close threshold editor">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <input type="hidden" id="thresholdId" />
+        <div class="form-grid">
+          <div class="field full-field">
+            <label for="thresholdMetric">Metric</label>
+            <select id="thresholdMetric" required>
+              <option value="temperature">Temperature (°C)</option>
+              <option value="humidity">Humidity (%)</option>
+              <option value="light">Light exposure (lux)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="thresholdMin">Minimum</label>
+            <input id="thresholdMin" type="number" step="any" inputmode="decimal" placeholder="No minimum" />
+            <small>Leave blank for no lower limit.</small>
+          </div>
+          <div class="field">
+            <label for="thresholdMax">Maximum</label>
+            <input id="thresholdMax" type="number" step="any" inputmode="decimal" placeholder="No maximum" />
+            <small>Leave blank for no upper limit.</small>
+          </div>
+          <div class="field">
+            <label for="thresholdHysteresis">Hysteresis</label>
+            <input id="thresholdHysteresis" type="number" min="0" step="any" inputmode="decimal" value="0.5" required />
+            <small>Buffer before an alert resets.</small>
+          </div>
+          <div class="field">
+            <label for="thresholdConsecutive">Consecutive readings</label>
+            <input id="thresholdConsecutive" type="number" min="1" step="1" inputmode="numeric" value="2" required />
+            <small>Helps prevent false alarms.</small>
+          </div>
+          <div class="field full-field">
+            <label for="thresholdEmail">Recipient email</label>
+            <input id="thresholdEmail" type="email" autocomplete="email" required placeholder="quality@example.com" />
+          </div>
+          <label class="toggle-row full-field" for="thresholdEnabled">
+            <span><strong>Rule enabled</strong><small>Evaluate new readings and send alert emails.</small></span>
+            <input id="thresholdEnabled" type="checkbox" checked />
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+        </div>
+        <p class="field-error is-hidden" id="thresholdFormError" role="alert"></p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-close-threshold>Cancel</button>
+          <button class="primary-button" id="saveThresholdButton" type="submit">Save threshold</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast-region" id="toastRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="config.js"></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>
