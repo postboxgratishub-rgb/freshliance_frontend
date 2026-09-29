@@ -5,6 +5,7 @@
   const OFFLINE_AFTER_MS = 120000;
   const API_BASE_STORAGE = 'freshliance_api_base_url';
   const DEFAULT_DEVICE_ID = 'NODE-001';
+  const DEPLOYMENT_LOCATION = 'IIIT Sonepat';
   const MAX_CHART_POINTS = 120;
   const API_BASE_URL = resolveApiBaseUrl();
 
@@ -81,7 +82,7 @@
   function cacheElements() {
     [
       'alertCount', 'lastUpdated', 'deviceSelect', 'refreshButton', 'copyEndpointButton',
-      'shipmentStatus', 'shipmentId', 'systemConnection', 'temperatureValue',
+      'shipmentStatus', 'shipmentId', 'locationValue', 'systemConnection', 'temperatureValue',
       'temperatureState', 'temperatureDetail', 'humidityValue', 'humidityState',
       'humidityDetail', 'lightValue', 'lightState', 'lightDetail', 'connectivityState',
       'connectivityValue', 'lastSeen', 'chartMetricLabel', 'chartCurrent', 'chartMin',
@@ -113,11 +114,11 @@
     try {
       response = await fetch(apiUrl(path), { ...options, headers, cache: 'no-store' });
     } catch (_) {
-      throw new ApiError('The monitoring service could not be reached.', 0);
+      throw new ApiError('Monitoring service unreachable.', 0);
     }
 
     if (!response.ok) {
-      let message = `Request failed (${response.status})`;
+      let message = `Request unsuccessful (${response.status}).`;
       try {
         const body = await response.json();
         message = body.message || body.error?.message || (typeof body.error === 'string' ? body.error : message);
@@ -291,7 +292,7 @@
       showPageError(error);
       if (!state.dashboard) renderUnavailableStates();
       renderConnection();
-      if (announce) showToast(error.message || 'Refresh failed.', true);
+      if (announce) showToast(error.message || 'Unable to refresh dashboard.', true);
     } finally {
       state.requestPending = false;
       elements.refreshButton.classList.remove('is-spinning');
@@ -315,6 +316,7 @@
     if (!state.dashboard) return;
     const device = state.dashboard.device;
     elements.shipmentId.textContent = device.shipmentId || '—';
+    if (elements.locationValue) elements.locationValue.textContent = DEPLOYMENT_LOCATION;
     elements.footerDevice.textContent = `${device.id || state.deviceId} · ${device.shipmentId || 'No shipment assigned'}`;
     renderMetrics();
     renderConnection();
@@ -352,7 +354,7 @@
       if (!Number.isFinite(value)) {
         stateElement.textContent = 'No data';
         stateElement.classList.add('neutral');
-        detailElement.textContent = 'Waiting for a sensor reading';
+        detailElement.textContent = 'Awaiting sensor data';
       } else if (direction) {
         anyBreach = true;
         stateElement.textContent = direction === 'high' ? 'Above limit' : 'Below limit';
@@ -385,20 +387,20 @@
     const title = connection.querySelector('strong');
     const detail = connection.querySelector('small');
     if (state.fetchError) {
-      title.textContent = 'Service unavailable';
-      detail.textContent = 'Retrying automatically';
+      title.textContent = 'Monitoring unavailable';
+      detail.textContent = 'Reconnecting automatically';
     } else if (online) {
-      title.textContent = 'Device online';
-      detail.textContent = `${state.deviceId} · telemetry active`;
+      title.textContent = 'GSM connected';
+      detail.textContent = `${state.deviceId} · cellular telemetry live`;
     } else {
-      title.textContent = 'Device offline';
-      detail.textContent = lastTime ? `Last reading ${relativeTime(lastTime)}` : 'No readings received';
+      title.textContent = 'GSM disconnected';
+      detail.textContent = lastTime ? `Last reading ${relativeTime(lastTime)}` : 'Awaiting first reading';
     }
     elements.connectivityState.className = `metric-state${online ? '' : ' danger'}`;
-    elements.connectivityState.textContent = online ? 'Connected' : 'Offline';
-    elements.connectivityValue.textContent = online ? 'Online' : 'Offline';
+    elements.connectivityState.textContent = online ? 'Connected' : 'Disconnected';
+    elements.connectivityValue.textContent = online ? 'GSM online' : 'GSM offline';
     const signal = latest?.rssi;
-    elements.lastSeen.textContent = lastTime ? `Last seen ${relativeTime(lastTime)}${Number.isFinite(signal) ? ` · ${signal} dBm` : ''}` : 'Last seen: never';
+    elements.lastSeen.textContent = lastTime ? `Last seen ${relativeTime(lastTime)}${Number.isFinite(signal) ? ` · ${signal} dBm` : ''}` : 'No telemetry received';
   }
 
   function renderChart() {
@@ -551,21 +553,21 @@
   function renderUnavailableStates() {
     elements.chartPlaceholder.classList.remove('is-hidden');
     elements.chartPlaceholder.classList.add('empty');
-    elements.chartPlaceholder.innerHTML = '<p>Sensor history is unavailable.</p>';
+    elements.chartPlaceholder.innerHTML = '<p>Sensor history unavailable.</p>';
     elements.historyChart.classList.add('is-hidden');
-    elements.thresholdContent.innerHTML = '<div class="error-state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.7 19h18.6L12 3Zm0 5v5m0 3v.1"/></svg><strong>Thresholds unavailable</strong><p>Reconnect to the service, then retry.</p><button class="text-button" type="button" data-retry>Retry now</button></div>';
-    elements.alertsBody.innerHTML = '<tr class="table-error"><td colspan="5">Recent alerts are unavailable. The dashboard will retry automatically.</td></tr>';
+    elements.thresholdContent.innerHTML = '<div class="error-state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.7 19h18.6L12 3Zm0 5v5m0 3v.1"/></svg><strong>Unable to load thresholds</strong><p>Check the monitoring service and retry.</p><button class="text-button" type="button" data-retry>Retry</button></div>';
+    elements.alertsBody.innerHTML = '<tr class="table-error"><td colspan="5">Unable to load recent alerts. Retrying automatically.</td></tr>';
     ['temperature', 'humidity', 'light'].forEach((metric) => {
       elements[`${metric}Value`].textContent = '—';
-      elements[`${metric}State`].textContent = 'Unavailable';
+      elements[`${metric}State`].textContent = 'No data';
       elements[`${metric}State`].className = 'metric-state neutral';
       elements[`${metric}Detail`].textContent = 'No reading received';
     });
   }
 
   function showPageError(error) {
-    elements.pageBannerTitle.textContent = 'Live data unavailable';
-    elements.pageBannerMessage.textContent = error?.message || 'Check the service connection and try again.';
+    elements.pageBannerTitle.textContent = 'Telemetry unavailable';
+    elements.pageBannerMessage.textContent = error?.message || 'Check the monitoring service and retry.';
     elements.pageBanner.classList.remove('is-hidden');
   }
 
@@ -574,7 +576,7 @@
   }
 
   function renderUpdatedTime() {
-    elements.lastUpdated.textContent = state.lastSuccessAt ? `Updated ${relativeTime(state.lastSuccessAt)}` : 'Waiting for data…';
+    elements.lastUpdated.textContent = state.lastSuccessAt ? `Updated ${relativeTime(state.lastSuccessAt)}` : 'Awaiting telemetry…';
   }
 
   function openThresholdDialog(threshold = null) {
@@ -622,7 +624,7 @@
       showToast(id ? 'Threshold updated.' : 'Threshold added.');
       await pollDashboard();
     } catch (error) {
-      showFormError(error.message || 'The threshold could not be saved.');
+      showFormError(error.message || 'Unable to save threshold.');
     } finally {
       elements.saveThresholdButton.disabled = false;
       elements.saveThresholdButton.textContent = 'Save threshold';
@@ -642,7 +644,7 @@
       await pollDashboard();
     } catch (error) {
       input.checked = !enabled;
-      showToast(error.message || 'Threshold could not be updated.', true);
+      showToast(error.message || 'Unable to update threshold.', true);
     } finally { input.disabled = false; }
   }
 
@@ -653,7 +655,7 @@
       await apiFetch(`/api/thresholds/${encodeURIComponent(id)}`, { method: 'DELETE' });
       showToast('Threshold deleted.');
       await pollDashboard();
-    } catch (error) { showToast(error.message || 'Threshold could not be deleted.', true); }
+    } catch (error) { showToast(error.message || 'Unable to delete threshold.', true); }
   }
 
   async function copyDeviceEndpoint() {
@@ -765,6 +767,7 @@
 
   async function init() {
     cacheElements();
+    if (elements.locationValue) elements.locationValue.textContent = DEPLOYMENT_LOCATION;
     setupEvents();
     showLoadingStates();
     await loadDevices();

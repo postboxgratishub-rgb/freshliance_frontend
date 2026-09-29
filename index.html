@@ -44,11 +44,11 @@
           <div class="nav-actions">
             <div class="connection-card" id="systemConnection" title="Device connection status">
               <span class="pulse-dot" aria-hidden="true"></span>
-              <div><strong>Connecting</strong><small>Waiting for device telemetry</small></div>
+              <div><strong>Connecting</strong><small>Waiting for GSM telemetry</small></div>
             </div>
             <button class="account-button" id="copyEndpointButton" type="button" title="Copy device endpoint">
               <span class="account-avatar" aria-hidden="true">↗</span>
-              <span><strong>Copy endpoint</strong><small>POST /api/sensor-readings</small></span>
+              <span><strong>Device API</strong><small>Copy endpoint</small></span>
             </button>
           </div>
         </div>
@@ -79,11 +79,19 @@
             <div>
               <div class="eyebrow"><span class="live-dot"></span> Live operations</div>
               <h1 id="overviewTitle">Shipment overview</h1>
-              <p>Live environmental conditions across your farm-to-fork journey.</p>
+              <p>Live cold-chain conditions and GSM device health at IIIT Sonepat.</p>
             </div>
             <div class="shipment-summary">
               <span class="status-chip" id="shipmentStatus"><span></span> Awaiting data</span>
               <div class="shipment-id"><small>Shipment</small><strong id="shipmentId">SHIP-001</strong></div>
+              <div class="summary-detail">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                <span><small>Location</small><strong id="locationValue">IIIT Sonepat</strong></span>
+              </div>
+              <div class="summary-detail network-detail">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-3m5 3v-7m5 7V9m5 11V4"/></svg>
+                <span><small>Network</small><strong>GSM / Cellular</strong></span>
+              </div>
             </div>
           </section>
 
@@ -128,10 +136,10 @@
 
             <article class="metric-card connectivity-card" data-metric="connectivity">
               <div class="metric-top">
-                <span class="metric-icon connectivity" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 9a14 14 0 0 1 18 0M6.5 12.5a9 9 0 0 1 11 0M10 16a4 4 0 0 1 4 0M12 20h.01"/></svg></span>
+                <span class="metric-icon connectivity" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20v-3m5 3v-7m5 7V9m5 11V4"/></svg></span>
                 <span class="metric-state neutral" id="connectivityState">Checking</span>
               </div>
-              <p class="metric-label">Connectivity</p>
+              <p class="metric-label">GSM connectivity</p>
               <div class="metric-value compact"><span id="connectivityValue">—</span></div>
               <p class="metric-detail" id="lastSeen">Last seen: never</p>
             </article>
