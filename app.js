@@ -3,7 +3,6 @@
 
   const POLL_INTERVAL_MS = 3000;
   const OFFLINE_AFTER_MS = 120000;
-  const ADMIN_KEY_STORAGE = 'fieldlink_admin_key';
   const API_BASE_STORAGE = 'freshliance_api_base_url';
   const DEFAULT_DEVICE_ID = 'NODE-001';
   const MAX_CHART_POINTS = 120;
@@ -70,8 +69,7 @@
     chartMetric: 'temperature',
     requestPending: false,
     fetchError: null,
-    lastSuccessAt: null,
-    authAsked: false
+    lastSuccessAt: null
   };
 
   const elements = {};
@@ -106,27 +104,16 @@
     }
   }
 
-  async function apiFetch(path, options = {}, allowAuthRetry = true) {
+  async function apiFetch(path, options = {}) {
     const headers = new Headers(options.headers || {});
     headers.set('Accept', 'application/json');
     if (options.body) headers.set('Content-Type', 'application/json');
-    const adminKey = sessionStorage.getItem(ADMIN_KEY_STORAGE);
-    if (adminKey) headers.set('X-Admin-Key', adminKey);
 
     let response;
     try {
       response = await fetch(apiUrl(path), { ...options, headers, cache: 'no-store' });
     } catch (_) {
       throw new ApiError('The monitoring service could not be reached.', 0);
-    }
-
-    if (response.status === 401 && allowAuthRetry) {
-      sessionStorage.removeItem(ADMIN_KEY_STORAGE);
-      const key = requestAdminKey();
-      if (key) {
-        sessionStorage.setItem(ADMIN_KEY_STORAGE, key);
-        return apiFetch(path, options, false);
-      }
     }
 
     if (!response.ok) {
@@ -141,13 +128,6 @@
       throw new ApiError(message, response.status);
     }
     return response.status === 204 ? null : response.json();
-  }
-
-  function requestAdminKey() {
-    if (state.authAsked) return '';
-    state.authAsked = true;
-    const value = window.prompt('Administrator access is required. Enter the admin API key:');
-    return typeof value === 'string' ? value.trim() : '';
   }
 
   function unwrapArray(value, keys = []) {
@@ -585,7 +565,7 @@
   }
 
   function showPageError(error) {
-    elements.pageBannerTitle.textContent = error?.status === 401 ? 'Administrator key required' : 'Live data unavailable';
+    elements.pageBannerTitle.textContent = 'Live data unavailable';
     elements.pageBannerMessage.textContent = error?.message || 'Check the service connection and try again.';
     elements.pageBanner.classList.remove('is-hidden');
   }
