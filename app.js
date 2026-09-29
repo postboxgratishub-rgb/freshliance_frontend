@@ -275,7 +275,6 @@
 
   async function pollDashboard({ announce = false } = {}) {
     if (state.requestPending) return;
-    if (announce) state.authAsked = false;
     state.requestPending = true;
     elements.refreshButton.classList.add('is-spinning');
     elements.refreshButton.setAttribute('aria-busy', 'true');

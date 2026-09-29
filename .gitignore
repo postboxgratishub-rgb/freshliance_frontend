@@ -2,3 +2,5 @@
 .netlify/
 .DS_Store
 *.log
+
+.vercel
