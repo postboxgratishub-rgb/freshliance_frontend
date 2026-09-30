@@ -650,7 +650,7 @@
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     link.href = blobUrl;
-    link.download = `fieldlink-${state.deviceId}-${timestamp}.csv`;
+    link.download = `freshliance-${state.deviceId}-${timestamp}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
